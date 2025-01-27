@@ -840,48 +840,73 @@
             resetGame();
         });
 
-        async function checkGlobalHighScore(score, difficulty) {
+        // Add at the start of your JS
+        const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyDuABDJZWQbKnmNuaXo8T_Gf-93Ipl4nwinO9OLo05Scx0NlFx_Q7w34wq4Le6SMjI/exec';
+
+        // Function to fetch high scores
+        async function getGlobalHighScores() {
             try {
-                // Fetch the appropriate file based on difficulty
-                const response = await fetch(`https://raw.githubusercontent.com/Iboy-x/Memory_Craft.git/main/highscore_${difficulty}.txt`);
-                const data = await response.text();
-                
-                // Parse the current high score and name
-                const [currentScore, currentName] = data.trim().split(' ');
-                
-                // If new score is higher
-                if (score > parseInt(currentScore)) {
-                    // Prompt for name
-                    let playerName = prompt("NEW GLOBAL HIGH SCORE! Enter your name (4 characters):", "");
-                    
-                    // Validate name length
-                    playerName = playerName?.substring(0, 4).toUpperCase() || "NONE";
-                    
-                    // Here you'll need to set up a way to update the file
-                    // For now, we can show what would be saved
-                    console.log(`New High Score to be saved: ${score} ${playerName}`);
-                    
-                    // You could also display this achievement
-                    alert(`Congratulations! New Global High Score!\nScore: ${score}\nPlayer: ${playerName}`);
-                }
+                const response = await fetch(SHEET_URL);
+                const data = await response.json();
+                // Skip header row and process data
+                const scores = {};
+                data.slice(1).forEach(row => {
+                    scores[row[0]] = {
+                        score: row[1],
+                        name: row[2]
+                    };
+                });
+                return scores;
             } catch (error) {
-                console.error("Error checking global high score:", error);
+                console.error("Error fetching scores:", error);
+                return null;
             }
         }
 
-        async function displayGlobalHighScore(difficulty) {
-            try {
-                const response = await fetch(`https://raw.githubusercontent.com/Iboy-x/Memory_Craft.git/main/highscore_${difficulty}.txt`);
-                const data = await response.text();
-                const [score, name] = data.trim().split(' ');
-                
-                // Add this to your HTML
-                document.getElementById('global-high-score').textContent = 
-                    `Global High Score: ${score} by ${name}`;
-            } catch (error) {
-                console.error("Error fetching global high score:", error);
+// Function to update high score
+async function updateGlobalHighScore(difficulty, score, name) {
+    try {
+        await fetch(SHEET_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                difficulty: difficulty,
+                score: score,
+                name: name
+            })
+        });
+    } catch (error) {
+        console.error("Error updating score:", error);
+    }
+}
+
+// Function to display scores in your game
+async function displayGlobalHighScores() {
+    const scores = await getGlobalHighScores();
+    if (!scores) return;
+    
+    const currentScore = scores[currentDifficulty];
+    if (currentScore) {
+        document.getElementById('global-high-score').textContent = 
+            `Global High Score: ${currentScore.score} by ${currentScore.name}`;
+    }
+}
+
+    // Add to your game over logic
+    function checkAndUpdateGlobalScore(finalScore) {
+        getGlobalHighScores().then(scores => {
+            const currentHigh = scores[currentDifficulty]?.score || 0;
+            if (finalScore > currentHigh) {
+                const playerName = prompt("NEW GLOBAL HIGH SCORE! Enter your name (4 characters):", "");
+                if (playerName) {
+                    const formattedName = playerName.substring(0, 4).toUpperCase();
+                    updateGlobalHighScore(currentDifficulty, finalScore, formattedName);
+                    alert(`Congratulations! New Global High Score!\nScore: ${finalScore}\nPlayer: ${formattedName}`);
+                }
             }
-        }
+        });
+    }
+
+        
 
         // When game starts:
         displayGlobalHighScore(currentDifficulty);
@@ -890,6 +915,67 @@
         if (gameIsOver) {
             checkGlobalHighScore(score, currentDifficulty);
         }
+
+        const pool = require('./db');
+
+module.exports = async (req, res) => {
+    res.setHeader('Access-Control-Allow-Credentials', true);
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+
+    if (req.method === 'GET') {
+        try {
+            const { difficulty } = req.query;
+            const result = await pool.sql`
+                SELECT users.username, scores.score, scores.time
+                FROM scores
+                JOIN users ON scores.user_id = users.id
+                WHERE scores.difficulty = ${difficulty}
+                ORDER BY scores.score DESC, scores.time ASC
+                LIMIT 10
+            `;
+            return res.status(200).json(result.rows);
+        } catch (error) {
+            console.error('Error fetching scores:', error);
+            return res.status(500).json({ error: 'Failed to fetch scores' });
+        }
+    }
+
+    if (req.method === 'POST') {
+        try {
+            const { username, score, difficulty, time } = req.body;
+            
+            // Get user ID
+            const userResult = await pool.sql`
+                SELECT id FROM users WHERE username = ${username}
+            `;
+            
+            if (userResult.rows.length === 0) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+
+            const userId = userResult.rows[0].id;
+
+            // Insert score
+            await pool.sql`
+                INSERT INTO scores (user_id, score, difficulty, time)
+                VALUES (${userId}, ${score}, ${difficulty}, ${time})
+            `;
+
+            return res.status(201).json({ message: 'Score saved successfully' });
+        } catch (error) {
+            console.error('Error saving score:', error);
+            return res.status(500).json({ error: 'Failed to save score' });
+        }
+    }
+
+    return res.status(405).json({ error: 'Method not allowed' });
+};
     </script>
 </body>
 </html>
