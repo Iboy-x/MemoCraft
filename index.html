@@ -228,13 +228,13 @@
             aspect-ratio: 1;
             position: relative;
             transform-style: preserve-3d;
-            transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+            transition: transform 0.4s ease;
             cursor: pointer;
             user-select: none;
         }
 
         .card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-2px);
         }
 
         .card.flipped {
@@ -255,7 +255,7 @@
             border-radius: 8px;
             background-color: var(--card-color);
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            transition: background-color 0.3s ease;
         }
 
         .card-back {
@@ -268,16 +268,15 @@
 
         .card:hover .card-front {
             background-color: #5a9654;
-            box-shadow: 0 5px 15px rgba(67, 235, 29, 0.3);
         }
 
         .card.matched .card-back {
-            animation: matchedCard 0.6s ease-out forwards;
-            box-shadow: 0 0 15px #43eb1d;
+            animation: matchedCard 0.4s ease-out forwards;
+            box-shadow: var(--matched-glow);
         }
 
         .card.wrong {
-            animation: wrongCard 0.5s cubic-bezier(0.36, 0, 0.66, -0.56);
+            animation: wrongCard 0.4s ease-out;
         }
 
         @keyframes matchedCard {
@@ -285,11 +284,7 @@
                 transform: rotateY(180deg) scale(1);
             }
             50% {
-                transform: rotateY(180deg) scale(1.15);
-                box-shadow: 0 0 30px #43eb1d;
-            }
-            75% {
-                transform: rotateY(180deg) scale(0.95);
+                transform: rotateY(180deg) scale(1.1);
             }
             100% {
                 transform: rotateY(180deg) scale(1);
@@ -300,11 +295,11 @@
             0%, 100% {
                 transform: rotateY(180deg) translateX(0);
             }
-            20%, 60% {
-                transform: rotateY(180deg) translateX(-8px);
+            33% {
+                transform: rotateY(180deg) translateX(-5px);
             }
-            40%, 80% {
-                transform: rotateY(180deg) translateX(8px);
+            66% {
+                transform: rotateY(180deg) translateX(5px);
             }
         }
 
@@ -379,6 +374,21 @@
         .modal h2 {
             font-size: clamp(1.5rem, 4vw, 2rem);
             margin-bottom: 15px;
+            color: #43eb1d;
+        }
+
+        .modal .score-message {
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 5px;
+            background: rgba(67, 235, 29, 0.1);
+            color: #43eb1d;
+        }
+
+        .modal .score-message.not-top {
+            background: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
         }
 
         .modal p {
@@ -568,22 +578,50 @@
             animation: glowPulse 1.5s infinite;
         }
 
-        /* Add celebration animations */
+        /* Improved victory animations */
         @keyframes celebrate {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
+            0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0; }
+            20% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.9; }
+            40% { transform: translate(-50%, -50%) scale(0.95); opacity: 1; }
+            60% { transform: translate(-50%, -50%) scale(1.05); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
         }
 
         @keyframes confetti {
-            0% { transform: translateY(0) rotateZ(0); opacity: 1; }
-            100% { transform: translateY(1000px) rotateZ(720deg); opacity: 0; }
+            0% { 
+                transform: translateY(-10px) rotateZ(0); 
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            100% { 
+                transform: translateY(1000px) rotateZ(720deg); 
+                opacity: 0;
+            }
         }
 
         @keyframes gameComplete {
-            0% { transform: scale(0.3); opacity: 0; }
-            50% { transform: scale(1.2); opacity: 0.8; }
-            100% { transform: scale(1); opacity: 1; }
+            0% { 
+                transform: translate(-50%, -50%) scale(3);
+                opacity: 0;
+                filter: blur(20px);
+            }
+            40% { 
+                transform: translate(-50%, -50%) scale(1.2);
+                opacity: 0.8;
+                filter: blur(0px);
+            }
+            60% { 
+                transform: translate(-50%, -50%) scale(0.9);
+                opacity: 1;
+            }
+            80% { 
+                transform: translate(-50%, -50%) scale(1.1);
+            }
+            100% { 
+                transform: translate(-50%, -50%) scale(1);
+            }
         }
 
         .celebration-overlay {
@@ -595,15 +633,24 @@
             height: 100%;
             z-index: 998;
             pointer-events: none;
+            perspective: 1000px;
+            opacity: 0;
+            transition: opacity 0.5s ease-in;
+        }
+
+        .celebration-overlay.active {
+            opacity: 1;
         }
 
         .confetti {
             position: absolute;
-            width: 10px;
-            height: 10px;
+            width: 15px;
+            height: 15px;
             background-color: #43eb1d;
             clip-path: polygon(50% 0%, 90% 20%, 100% 60%, 75% 100%, 25% 100%, 0% 60%, 10% 20%);
-            animation: confetti 2s ease-out forwards;
+            animation: confetti 2.5s ease-out forwards;
+            transform-style: preserve-3d;
+            will-change: transform;
         }
 
         .victory-text {
@@ -611,18 +658,26 @@
             position: fixed;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 4rem;
+            transform: translate(-50%, -50%) scale(3);
+            font-size: 5rem;
             color: #43eb1d;
-            text-shadow: 0 0 20px rgba(67, 235, 29, 0.5);
+            text-shadow: 0 0 30px rgba(67, 235, 29, 0.7),
+                         0 0 60px rgba(67, 235, 29, 0.4);
             z-index: 999;
-            animation: gameComplete 0.5s ease-out forwards;
+            animation: gameComplete 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
             pointer-events: none;
+            white-space: nowrap;
+            opacity: 0;
+            will-change: transform, opacity;
         }
 
-        /* Update modal animation for game end */
         .modal.game-complete {
-            animation: celebrate 0.5s ease-out;
+            animation: celebrate 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            transform-origin: center center;
+        }
+
+        .modal-overlay {
+            transition: opacity 0.5s ease-out;
         }
     </style>
 </head>
@@ -673,6 +728,7 @@
         <p>Final Score: <span id="final-score"></span></p>
         <p>Time: <span id="final-time"></span>s</p>
         <p>High Score: <span id="modal-high-score"></span></p>
+        <div class="score-message" id="score-message"></div>
         <button id="restart-game">Play Again</button>
     </div>
 
@@ -852,13 +908,23 @@
         }
 
         async function showGameOverModal(finalScore, totalTime) {
-            // Create celebration effect
+            // Start celebration effect
             createConfetti();
             
-            // Add game complete class to modal for animation
-            modal.classList.add('game-complete');
+            // Show modal with improved timing
+            setTimeout(() => {
+                modal.classList.add('game-complete');
+                modal.style.display = 'block';
+                modalOverlay.style.display = 'block';
+                modalOverlay.style.opacity = '0';
+                
+                // Fade in overlay smoothly
+                requestAnimationFrame(() => {
+                    modalOverlay.style.opacity = '1';
+                });
+            }, 2000); // Delay modal to let victory animation play
 
-            // Existing modal code
+            // Update modal content
             document.getElementById('final-score').textContent = finalScore;
             document.getElementById('final-time').textContent = totalTime;
             
@@ -878,22 +944,24 @@
 
             // Check if score qualifies for leaderboard
             const isHighScore = await checkHighScore(finalScore, currentDifficulty);
+            const scoreMessage = document.getElementById('score-message');
             
             if (isHighScore) {
-                const playerName = prompt("🏆 NEW HIGH SCORE! Enter your name for the leaderboard (max 15 characters):");
-                if (playerName) {
-                    submitScore(playerName, finalScore, totalTime, currentDifficulty);
-                }
+                // Delay the prompt to not interrupt animations
+                scoreMessage.classList.remove('not-top');
+                scoreMessage.textContent = "🏆 Congratulations! You made it to the top 10!";
+                setTimeout(() => {
+                    const playerName = prompt("Enter your name for the leaderboard (max 15 characters):");
+                    if (playerName) {
+                        submitScore(playerName, finalScore, totalTime, currentDifficulty);
+                    }
+                }, 2500);
             } else {
                 console.log("Score not high enough for leaderboard");
+                scoreMessage.classList.add('not-top');
+                scoreMessage.textContent = `Keep practicing! You need a higher score to reach the top 10 in ${currentDifficulty} mode. Try again! 🎮`;
                 fetchLeaderboard(currentDifficulty);
             }
-
-            // Show modal with slight delay for better effect
-            setTimeout(() => {
-                modal.style.display = 'block';
-                modalOverlay.style.display = 'block';
-            }, 1000);
         }
 
         restartButton.addEventListener('click', () => {
@@ -982,7 +1050,6 @@
             const oldScore = score;
 
             if (card1.dataset.item === card2.dataset.item) {
-                // Play match sound
                 matchSound.currentTime = 0;
                 matchSound.play().catch(e => console.log('Audio play failed:', e));
 
@@ -992,7 +1059,6 @@
                 matchedCount += 2;
                 score = calculateScore(matchedCount / 2, moves, Math.floor((Date.now() - startTime) / 1000));
                 
-                // Calculate score difference and create popup
                 const scoreDiff = score - oldScore;
                 const rect = card1.getBoundingClientRect();
                 createScorePopup(rect.left + rect.width / 2, rect.top, scoreDiff);
@@ -1002,12 +1068,11 @@
                 if (matchedCount === itemPairs.length) {
                     const totalTime = Math.floor((Date.now() - startTime) / 1000);
                     clearInterval(timerInterval);
-                    setTimeout(() => showGameOverModal(score, totalTime), 800);
+                    setTimeout(() => showGameOverModal(score, totalTime), 500);
                 }
 
                 flippedCards = [];
             } else {
-                // Play wrong sound
                 wrongSound.currentTime = 0;
                 wrongSound.play().catch(e => console.log('Audio play failed:', e));
 
@@ -1018,7 +1083,7 @@
                     card1.classList.remove('flipped', 'wrong');
                     card2.classList.remove('flipped', 'wrong');
                     flippedCards = [];
-                }, flipTime);
+                }, flipTime * 0.7); // Reduced flip time for wrong matches
             }
         }
 
@@ -1191,31 +1256,72 @@
         // Update background image path
         document.body.style.backgroundImage = 'url("./images/minecraft_bg.jpg")';
 
-        // Add celebration functions
+        // Enhanced celebration function
         function createConfetti() {
             const overlay = document.getElementById('celebration-overlay');
+            const victoryText = document.getElementById('victory-text');
+            
             overlay.style.display = 'block';
             overlay.innerHTML = '';
+            
+            // Trigger reflow for smooth animation
+            void overlay.offsetWidth;
+            overlay.classList.add('active');
 
-            // Create multiple confetti pieces
-            for (let i = 0; i < 100; i++) {
+            // Create multiple confetti pieces with improved variety
+            for (let i = 0; i < 150; i++) {
                 const confetti = document.createElement('div');
                 confetti.className = 'confetti';
+                
+                // Randomize confetti properties
                 confetti.style.left = Math.random() * 100 + 'vw';
-                confetti.style.animationDelay = Math.random() * 2 + 's';
-                confetti.style.backgroundColor = ['#43eb1d', '#5cdb95', '#ffeb3b', '#ff5722'][Math.floor(Math.random() * 4)];
+                confetti.style.animationDelay = Math.random() * 0.8 + 's';
+                confetti.style.animationDuration = (Math.random() * 0.5 + 2) + 's';
+                
+                // More varied colors including Minecraft theme
+                const colors = ['#43eb1d', '#5cdb95', '#ffeb3b', '#ff5722', '#2ecc71', '#f1c40f'];
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                
+                // Randomize size
+                const size = Math.random() * 8 + 10;
+                confetti.style.width = size + 'px';
+                confetti.style.height = size + 'px';
+                
+                // Add 3D rotation with more natural movement
+                confetti.style.transform = `
+                    rotateX(${Math.random() * 360}deg) 
+                    rotateY(${Math.random() * 360}deg)
+                    rotate(${Math.random() * 360}deg)
+                    translateZ(${Math.random() * 100}px)
+                `;
+                
                 overlay.appendChild(confetti);
             }
 
-            // Show victory text
-            const victoryText = document.getElementById('victory-text');
-            victoryText.style.display = 'block';
-
-            // Clean up after animations
+            // Show victory text with improved timing
             setTimeout(() => {
-                overlay.style.display = 'none';
-                victoryText.style.display = 'none';
-            }, 4000);
+                victoryText.style.display = 'block';
+                victoryText.style.opacity = '1';
+            }, 300);
+
+            // Clean up animations with smoother transitions
+            setTimeout(() => {
+                victoryText.style.transition = 'opacity 0.8s ease-out';
+                overlay.style.transition = 'opacity 0.8s ease-out';
+                victoryText.style.opacity = '0';
+                overlay.style.opacity = '0';
+                
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    victoryText.style.display = 'none';
+                    overlay.classList.remove('active');
+                    // Reset styles
+                    overlay.style.opacity = '';
+                    victoryText.style.opacity = '';
+                    overlay.style.transition = '';
+                    victoryText.style.transition = '';
+                }, 800);
+            }, 3500);
         }
     </script>
 
