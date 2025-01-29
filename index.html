@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="images/pickaxe.png">
     <title>Memory Craft</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans&display=swap');
@@ -343,6 +344,94 @@
             animation: scorePopup 1s ease-out forwards;
             z-index: 1000;
         }
+
+        /* Add these leaderboard styles */
+        .leaderboard {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            margin: 15px auto;
+            box-shadow: 0 0 20px rgba(67, 235, 29, 0.2);
+        }
+
+        .leaderboard h2 {
+            color: #43eb1d;
+            text-align: center;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px rgba(67, 235, 29, 0.3);
+        }
+
+        .leaderboard-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .leaderboard-tabs .tab-btn {
+            background: var(--card-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Pixelify Sans', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .leaderboard-tabs .tab-btn.active {
+            background: #43eb1d;
+            color: #000;
+        }
+
+        .leaderboard-entry {
+            display: grid;
+            grid-template-columns: 0.5fr 2fr 1fr 1fr;
+            padding: 8px;
+            margin: 5px 0;
+            background: rgba(67, 235, 29, 0.1);
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+
+        .leaderboard-entry:nth-child(even) {
+            background: rgba(67, 235, 29, 0.05);
+        }
+
+        .leaderboard-entry .rank {
+            color: #43eb1d;
+        }
+
+        .leaderboard-entry .score {
+            color: #43eb1d;
+            text-align: right;
+        }
+
+        .leaderboard-entry .time {
+            color: #fff;
+            text-align: right;
+        }
+
+        .no-scores {
+            text-align: center;
+            color: #43eb1d;
+            padding: 10px;
+        }
+
+        .error {
+            text-align: center;
+            color: #ff4444;
+            padding: 10px;
+        }
+
+        .loading {
+            text-align: center;
+            color: #43eb1d;
+            padding: 10px;
+            animation: pulse 1.5s infinite;
+        }
     </style>
 </head>
 <body data-theme="dark">
@@ -395,8 +484,18 @@
         <button id="restart-game">Play Again</button>
     </div>
 
-    <div class="score-board">
-        <div id="global-high-score">Global High Score: Loading...</div>
+    
+    <!-- Add this after the score-board div -->
+    <div class="leaderboard">
+        <h2>Global Leaderboard</h2>
+        <div class="leaderboard-tabs">
+            <button class="tab-btn active" data-tab="easy">Easy</button>
+            <button class="tab-btn" data-tab="medium">Medium</button>
+            <button class="tab-btn" data-tab="hard">Hard</button>
+        </div>
+        <div class="leaderboard-content">
+            <div id="leaderboard-scores"></div>
+        </div>
     </div>
 
     <audio id="bg-music" loop autoplay>
@@ -541,6 +640,10 @@
         function showGameOverModal(finalScore, totalTime) {
             document.getElementById('final-score').textContent = finalScore;
             document.getElementById('final-time').textContent = totalTime;
+            
+            // Update global high score
+            updateGlobalHighScore(finalScore, totalTime);
+            
             let currentHighScore;
             switch(currentDifficulty) {
                 case 'easy':
@@ -840,142 +943,129 @@
             resetGame();
         });
 
-        // Add at the start of your JS
-        const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyDuABDJZWQbKnmNuaXo8T_Gf-93Ipl4nwinO9OLo05Scx0NlFx_Q7w34wq4Le6SMjI/exec';
+        // Constants
+        const SHEET_URL = 'https://script.google.com/macros/s/AKfycbz-BOP-DphCc4qx6gDA2Aid7hTerVqWWN0RTj0KnLwJJUjGEpV1yi9GfPaOWma08WLt/exec';
 
-        // Function to fetch high scores
-        async function getGlobalHighScores() {
+        // Function to fetch and display global high scores
+        async function displayGlobalHighScores() {
+            const leaderboardDiv = document.getElementById('leaderboard-scores');
+            if (!leaderboardDiv) {
+                console.error('Leaderboard div not found');
+                return;
+            }
+
             try {
-                const response = await fetch(SHEET_URL);
-                const data = await response.json();
-                // Skip header row and process data
-                const scores = {};
-                data.slice(1).forEach(row => {
-                    scores[row[0]] = {
-                        score: row[1],
-                        name: row[2]
-                    };
+                leaderboardDiv.innerHTML = '<p class="loading">Loading scores...</p>';
+
+                const response = await fetch(`${SHEET_URL}?difficulty=${currentDifficulty}`, {
+                    method: 'GET',
+                    mode: 'cors'
                 });
-                return scores;
-            } catch (error) {
-                console.error("Error fetching scores:", error);
-                return null;
-            }
-        }
 
-// Function to update high score
-async function updateGlobalHighScore(difficulty, score, name) {
-    try {
-        await fetch(SHEET_URL, {
-            method: 'POST',
-            body: JSON.stringify({
-                difficulty: difficulty,
-                score: score,
-                name: name
-            })
-        });
-    } catch (error) {
-        console.error("Error updating score:", error);
-    }
-}
+                const data = await response.json();
+                console.log('Received data:', data);
 
-// Function to display scores in your game
-async function displayGlobalHighScores() {
-    const scores = await getGlobalHighScores();
-    if (!scores) return;
-    
-    const currentScore = scores[currentDifficulty];
-    if (currentScore) {
-        document.getElementById('global-high-score').textContent = 
-            `Global High Score: ${currentScore.score} by ${currentScore.name}`;
-    }
-}
-
-    // Add to your game over logic
-    function checkAndUpdateGlobalScore(finalScore) {
-        getGlobalHighScores().then(scores => {
-            const currentHigh = scores[currentDifficulty]?.score || 0;
-            if (finalScore > currentHigh) {
-                const playerName = prompt("NEW GLOBAL HIGH SCORE! Enter your name (4 characters):", "");
-                if (playerName) {
-                    const formattedName = playerName.substring(0, 4).toUpperCase();
-                    updateGlobalHighScore(currentDifficulty, finalScore, formattedName);
-                    alert(`Congratulations! New Global High Score!\nScore: ${finalScore}\nPlayer: ${formattedName}`);
+                if (!data || !Array.isArray(data) || data.length === 0) {
+                    leaderboardDiv.innerHTML = '<p class="no-scores">No scores yet for this difficulty!</p>';
+                    return;
                 }
+
+                // Display top 10 scores
+                leaderboardDiv.innerHTML = data.slice(0, 10).map((scoreData, index) => {
+                    const [difficulty, score, name, time] = scoreData;
+                    return `
+                        <div class="leaderboard-entry">
+                            <span class="rank">#${index + 1}</span>
+                            <span class="name">${name || 'Anonymous'}</span>
+                            <span class="score">${score} pts</span>
+                            <span class="time">${time}s</span>
+                        </div>
+                    `;
+                }).join('');
+
+                // Update global high score display
+                const globalHighScoreDiv = document.getElementById('global-high-score');
+                if (globalHighScoreDiv && data.length > 0) {
+                    const [_, topScore, topName] = data[0];
+                    globalHighScoreDiv.textContent = 
+                        `Global High Score (${currentDifficulty}): ${topScore} pts by ${topName || 'Anonymous'}`;
+                }
+            } catch (error) {
+                console.error('Error fetching scores:', error);
+                leaderboardDiv.innerHTML = '<p class="error">Failed to load leaderboard. Please try again later.</p>';
             }
+        }
+
+        // Function to submit a new score
+        async function updateGlobalHighScore(score, time) {
+            if (!score || !time) {
+                console.error('Invalid score or time');
+                return;
+            }
+
+            try {
+                const playerName = prompt("Enter your name (max 10 characters):", "");
+                if (!playerName) return; // User cancelled
+
+                const submitData = {
+                    difficulty: currentDifficulty,
+                    score: Number(score),
+                    name: playerName.trim().substring(0, 10),
+                    time: Number(time)
+                };
+
+                const response = await fetch(SHEET_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(submitData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    console.log('Score saved successfully');
+                    alert(`🎉 Congratulations! Your score of ${score} points has been saved!`);
+                    setTimeout(displayGlobalHighScores, 1000);
+                } else {
+                    throw new Error(result.error || 'Failed to save score');
+                }
+            } catch (error) {
+                console.error('Error saving score:', error);
+                alert('Sorry, there was an error saving your score. Please try again.');
+            }
+        }
+
+        // Initialize leaderboard when page loads
+        window.addEventListener('load', () => {
+            displayGlobalHighScores();
+            console.log('Initial leaderboard load triggered');
         });
-    }
 
-        
+        // Update leaderboard when difficulty changes
+        difficultyButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                displayGlobalHighScores();
+                console.log('Difficulty changed, updating leaderboard');
+            });
+        });
 
-        // When game starts:
-        displayGlobalHighScore(currentDifficulty);
-
-        // In your game over logic:
-        if (gameIsOver) {
-            checkGlobalHighScore(score, currentDifficulty);
-        }
-
-        const pool = require('./db');
-
-module.exports = async (req, res) => {
-    res.setHeader('Access-Control-Allow-Credentials', true);
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-    }
-
-    if (req.method === 'GET') {
-        try {
-            const { difficulty } = req.query;
-            const result = await pool.sql`
-                SELECT users.username, scores.score, scores.time
-                FROM scores
-                JOIN users ON scores.user_id = users.id
-                WHERE scores.difficulty = ${difficulty}
-                ORDER BY scores.score DESC, scores.time ASC
-                LIMIT 10
-            `;
-            return res.status(200).json(result.rows);
-        } catch (error) {
-            console.error('Error fetching scores:', error);
-            return res.status(500).json({ error: 'Failed to fetch scores' });
-        }
-    }
-
-    if (req.method === 'POST') {
-        try {
-            const { username, score, difficulty, time } = req.body;
-            
-            // Get user ID
-            const userResult = await pool.sql`
-                SELECT id FROM users WHERE username = ${username}
-            `;
-            
-            if (userResult.rows.length === 0) {
-                return res.status(404).json({ error: 'User not found' });
-            }
-
-            const userId = userResult.rows[0].id;
-
-            // Insert score
-            await pool.sql`
-                INSERT INTO scores (user_id, score, difficulty, time)
-                VALUES (${userId}, ${score}, ${difficulty}, ${time})
-            `;
-
-            return res.status(201).json({ message: 'Score saved successfully' });
-        } catch (error) {
-            console.error('Error saving score:', error);
-            return res.status(500).json({ error: 'Failed to save score' });
-        }
-    }
-
-    return res.status(405).json({ error: 'Method not allowed' });
-};
+        // Add tab functionality for leaderboard
+        document.querySelectorAll('.leaderboard-tabs .tab-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                // Update active tab
+                document.querySelectorAll('.leaderboard-tabs .tab-btn').forEach(btn => 
+                    btn.classList.remove('active'));
+                button.classList.add('active');
+                
+                // Update difficulty and refresh leaderboard
+                currentDifficulty = button.dataset.tab;
+                displayGlobalHighScores();
+                console.log('Tab changed to:', currentDifficulty);
+            });
+        });
     </script>
 </body>
 </html>
