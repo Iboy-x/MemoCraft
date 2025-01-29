@@ -578,49 +578,36 @@
             animation: glowPulse 1.5s infinite;
         }
 
-        /* Improved victory animations */
+        /* Optimized victory animations */
         @keyframes celebrate {
             0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0; }
-            20% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.9; }
-            40% { transform: translate(-50%, -50%) scale(0.95); opacity: 1; }
-            60% { transform: translate(-50%, -50%) scale(1.05); opacity: 1; }
             100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
         }
 
         @keyframes confetti {
             0% { 
-                transform: translateY(-10px) rotateZ(0); 
+                transform: translateY(0) rotateZ(0); 
                 opacity: 0;
             }
-            10% {
+            15% {
                 opacity: 1;
             }
             100% { 
-                transform: translateY(1000px) rotateZ(720deg); 
+                transform: translateY(800px) rotateZ(360deg); 
                 opacity: 0;
             }
         }
 
         @keyframes gameComplete {
             0% { 
-                transform: translate(-50%, -50%) scale(3);
+                transform: translate(-50%, -50%) scale(2);
                 opacity: 0;
-                filter: blur(20px);
-            }
-            40% { 
-                transform: translate(-50%, -50%) scale(1.2);
-                opacity: 0.8;
-                filter: blur(0px);
-            }
-            60% { 
-                transform: translate(-50%, -50%) scale(0.9);
-                opacity: 1;
-            }
-            80% { 
-                transform: translate(-50%, -50%) scale(1.1);
+                filter: blur(10px);
             }
             100% { 
                 transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+                filter: blur(0px);
             }
         }
 
@@ -633,9 +620,8 @@
             height: 100%;
             z-index: 998;
             pointer-events: none;
-            perspective: 1000px;
             opacity: 0;
-            transition: opacity 0.5s ease-in;
+            transition: opacity 0.3s ease-in;
         }
 
         .celebration-overlay.active {
@@ -644,12 +630,11 @@
 
         .confetti {
             position: absolute;
-            width: 15px;
-            height: 15px;
+            width: 12px;
+            height: 12px;
             background-color: #43eb1d;
             clip-path: polygon(50% 0%, 90% 20%, 100% 60%, 75% 100%, 25% 100%, 0% 60%, 10% 20%);
-            animation: confetti 2.5s ease-out forwards;
-            transform-style: preserve-3d;
+            animation: confetti 2s ease-out forwards;
             will-change: transform;
         }
 
@@ -658,13 +643,12 @@
             position: fixed;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%) scale(3);
-            font-size: 5rem;
+            transform: translate(-50%, -50%) scale(2);
+            font-size: 4rem;
             color: #43eb1d;
-            text-shadow: 0 0 30px rgba(67, 235, 29, 0.7),
-                         0 0 60px rgba(67, 235, 29, 0.4);
+            text-shadow: 0 0 20px rgba(67, 235, 29, 0.6);
             z-index: 999;
-            animation: gameComplete 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation: gameComplete 0.8s ease-out forwards;
             pointer-events: none;
             white-space: nowrap;
             opacity: 0;
@@ -672,7 +656,7 @@
         }
 
         .modal.game-complete {
-            animation: celebrate 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation: celebrate 0.5s ease-out forwards;
             transform-origin: center center;
         }
 
@@ -908,21 +892,19 @@
         }
 
         async function showGameOverModal(finalScore, totalTime) {
-            // Start celebration effect
             createConfetti();
             
-            // Show modal with improved timing
+            // Show modal with optimized timing
             setTimeout(() => {
                 modal.classList.add('game-complete');
                 modal.style.display = 'block';
                 modalOverlay.style.display = 'block';
                 modalOverlay.style.opacity = '0';
                 
-                // Fade in overlay smoothly
                 requestAnimationFrame(() => {
                     modalOverlay.style.opacity = '1';
                 });
-            }, 2000); // Delay modal to let victory animation play
+            }, 1200);
 
             // Update modal content
             document.getElementById('final-score').textContent = finalScore;
@@ -1256,7 +1238,7 @@
         // Update background image path
         document.body.style.backgroundImage = 'url("./images/minecraft_bg.jpg")';
 
-        // Enhanced celebration function
+        // Optimized celebration function
         function createConfetti() {
             const overlay = document.getElementById('celebration-overlay');
             const victoryText = document.getElementById('victory-text');
@@ -1264,64 +1246,37 @@
             overlay.style.display = 'block';
             overlay.innerHTML = '';
             
-            // Trigger reflow for smooth animation
-            void overlay.offsetWidth;
-            overlay.classList.add('active');
+            requestAnimationFrame(() => {
+                overlay.classList.add('active');
 
-            // Create multiple confetti pieces with improved variety
-            for (let i = 0; i < 150; i++) {
-                const confetti = document.createElement('div');
-                confetti.className = 'confetti';
-                
-                // Randomize confetti properties
-                confetti.style.left = Math.random() * 100 + 'vw';
-                confetti.style.animationDelay = Math.random() * 0.8 + 's';
-                confetti.style.animationDuration = (Math.random() * 0.5 + 2) + 's';
-                
-                // More varied colors including Minecraft theme
-                const colors = ['#43eb1d', '#5cdb95', '#ffeb3b', '#ff5722', '#2ecc71', '#f1c40f'];
-                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                
-                // Randomize size
-                const size = Math.random() * 8 + 10;
-                confetti.style.width = size + 'px';
-                confetti.style.height = size + 'px';
-                
-                // Add 3D rotation with more natural movement
-                confetti.style.transform = `
-                    rotateX(${Math.random() * 360}deg) 
-                    rotateY(${Math.random() * 360}deg)
-                    rotate(${Math.random() * 360}deg)
-                    translateZ(${Math.random() * 100}px)
-                `;
-                
-                overlay.appendChild(confetti);
-            }
+                // Create fewer confetti pieces for better performance
+                for (let i = 0; i < 80; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    
+                    // Simplified confetti properties
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                    confetti.style.backgroundColor = ['#43eb1d', '#5cdb95', '#ffeb3b'][Math.floor(Math.random() * 3)];
+                    
+                    overlay.appendChild(confetti);
+                }
 
-            // Show victory text with improved timing
-            setTimeout(() => {
-                victoryText.style.display = 'block';
-                victoryText.style.opacity = '1';
-            }, 300);
-
-            // Clean up animations with smoother transitions
-            setTimeout(() => {
-                victoryText.style.transition = 'opacity 0.8s ease-out';
-                overlay.style.transition = 'opacity 0.8s ease-out';
-                victoryText.style.opacity = '0';
-                overlay.style.opacity = '0';
-                
+                // Show victory text with optimized timing
                 setTimeout(() => {
-                    overlay.style.display = 'none';
-                    victoryText.style.display = 'none';
+                    victoryText.style.display = 'block';
+                    victoryText.style.opacity = '1';
+                }, 200);
+
+                // Cleanup with optimized timing
+                setTimeout(() => {
                     overlay.classList.remove('active');
-                    // Reset styles
-                    overlay.style.opacity = '';
-                    victoryText.style.opacity = '';
-                    overlay.style.transition = '';
-                    victoryText.style.transition = '';
-                }, 800);
-            }, 3500);
+                    setTimeout(() => {
+                        overlay.style.display = 'none';
+                        victoryText.style.display = 'none';
+                    }, 300);
+                }, 2500);
+            });
         }
     </script>
 
