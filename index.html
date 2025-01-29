@@ -5,9 +5,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="images/pickaxe.png">
     <title>Memory Craft</title>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, where, orderBy, limit, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyB1Q6rt_NwIcTYgZZWqne7srnq3E3ZJVVU",
+            authDomain: "memorycraft-cba14.firebaseapp.com",
+            projectId: "memorycraft-cba14",
+            storageBucket: "memorycraft-cba14.firebasestorage.app",
+            messagingSenderId: "853110747298",
+            appId: "1:853110747298:web:35507c8a932f1835a267fb"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Make Firebase services available globally
+        window.auth = auth;
+        window.db = db;
+        window.serverTimestamp = serverTimestamp;
+        window.collection = collection;
+        window.addDoc = addDoc;
+        window.query = query;
+        window.where = where;
+        window.orderBy = orderBy;
+        window.limit = limit;
+        window.getDocs = getDocs;
+
+        // Set up anonymous authentication
+        signInAnonymously(auth)
+            .then(() => {
+                console.log("User signed in anonymously");
+                window.fetchLeaderboard("easy"); // Initial leaderboard load
+            })
+            .catch((error) => {
+                console.error("Authentication error:", error);
+            });
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans&display=swap');
 
@@ -348,53 +388,91 @@
             z-index: 1000;
         }
 
-        /* Remove all leaderboard-related CSS styles */
+        /* Remove Google Sheets related styles */
         .leaderboard {
-    background: rgba(0, 0, 0, 0.7);
-    padding: 20px;
-    border-radius: 10px;
-    margin: 20px 0;
-    width: 90%;
-    max-width: 600px;
-}
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            width: 90%;
+            max-width: 600px;
+        }
 
-.leaderboard-tabs {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
-}
+        .leaderboard h2 {
+            color: #43eb1d;
+            text-align: center;
+            margin-bottom: 15px;
+            text-shadow: 0 0 5px rgba(67, 235, 29, 0.3);
+        }
 
-.tab-btn {
-    background: var(--card-color);
-    color: var(--card-flipped-color);
-    border: none;
-    padding: 5px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-}
+        .leaderboard-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
 
-.tab-btn.active {
-    background: var(--card-flipped-color);
-    color: var(--card-color);
-}
+        .tab-btn {
+            background: var(--card-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Pixelify Sans', sans-serif;
+            transition: all 0.3s ease;
+        }
 
-.leaderboard-entries {
-    max-height: 300px;
-    overflow-y: auto;
-}
+        .tab-btn.active {
+            background: #43eb1d;
+            color: #000;
+        }
 
-.leaderboard-entry {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px;
-    margin: 5px 0;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 5px;
-}
+        .leaderboard-entry {
+            display: grid;
+            grid-template-columns: 0.5fr 2fr 1fr 1fr;
+            padding: 8px;
+            margin: 5px 0;
+            background: rgba(67, 235, 29, 0.1);
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
 
-.leaderboard-entry:nth-child(even) {
-    background: rgba(255, 255, 255, 0.05);
-}
+        .leaderboard-entry:nth-child(even) {
+            background: rgba(67, 235, 29, 0.05);
+        }
+
+        .leaderboard-entry .rank {
+            color: #43eb1d;
+        }
+
+        .leaderboard-entry .name {
+            color: #fff;
+        }
+
+        .leaderboard-entry .score {
+            color: #43eb1d;
+            text-align: right;
+        }
+
+        .leaderboard-entry .time {
+            color: #fff;
+            text-align: right;
+        }
+
+        .no-scores {
+            text-align: center;
+            color: #43eb1d;
+            padding: 10px;
+        }
+
+        /* Add loading style */
+        .loading {
+            text-align: center;
+            color: #43eb1d;
+            padding: 10px;
+            animation: pulse 1.5s infinite;
+        }
     </style>
 </head>
 <body data-theme="dark">
@@ -448,13 +526,13 @@
     </div>
 
     <div class="leaderboard">
-        <h2>Leaderboard</h2>
+        <h2>Global Leaderboard</h2>
         <div class="leaderboard-tabs">
             <button class="tab-btn active" data-difficulty="easy">Easy</button>
             <button class="tab-btn" data-difficulty="medium">Medium</button>
             <button class="tab-btn" data-difficulty="hard">Hard</button>
         </div>
-        <div class="leaderboard-entries" id="leaderboard-entries"></div>
+        <div id="leaderboard-entries"></div>
     </div>
 
     <audio id="bg-music" loop autoplay>
@@ -613,6 +691,13 @@
                     break;
             }
             document.getElementById('modal-high-score').textContent = currentHighScore;
+
+            // Prompt for name and submit score to Firebase
+            const playerName = prompt("Enter your name for the leaderboard (max 15 characters):");
+            if (playerName) {
+                submitScore(playerName, finalScore, totalTime, currentDifficulty);
+            }
+
             modal.style.display = 'block';
             modalOverlay.style.display = 'block';
         }
@@ -899,99 +984,94 @@
             resetGame();
         });
 
-        // Initialize Firebase
-        const firebaseConfig = {
-        apiKey: "AIzaSyB1Q6rt_NwIcTYgZZWqne7srnq3E3ZJVVU",
-        authDomain: "memorycraft-cba14.firebaseapp.com",
-        projectId: "memorycraft-cba14",
-        storageBucket: "memorycraft-cba14.firebasestorage.app",
-        messagingSenderId: "853110747298",
-        appId: "1:853110747298:web:35507c8a932f1835a267fb"
-        };
-
-        // Initialize Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-
-        auth.signInAnonymously()
-            .then(() => {
-                console.log("User signed in anonymously");
-            })
-            .catch((error) => {
-                console.error("Authentication error:", error);
-            });
-
+        // Firebase score submission
         async function submitScore(name, score, time, difficulty) {
-            const user = auth.currentUser;
-            if (!user) {
-                console.error("User not authenticated");
-                return;
-            }
-
-            const scoreData = {
-                name: name.substring(0, 15), // Limit name length
-                score: score,
-                time: time,
-                difficulty: difficulty,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            };
-
             try {
-                await db.collection("scores").add(scoreData);
+                const user = auth.currentUser;
+                if (!user) {
+                    console.error("User not authenticated");
+                    return;
+                }
+
+                const scoreData = {
+                    name: name.substring(0, 15),
+                    score: Number(score),
+                    time: Number(time),
+                    difficulty: difficulty,
+                    timestamp: serverTimestamp()
+                };
+
+                await addDoc(collection(db, "scores"), scoreData);
                 console.log("Score submitted successfully");
+                fetchLeaderboard(difficulty); // Refresh leaderboard after submission
             } catch (error) {
                 console.error("Error submitting score:", error);
             }
         }
 
+        // Fetch and display leaderboard
         async function fetchLeaderboard(difficulty) {
+            const leaderboardDiv = document.getElementById("leaderboard-entries");
+            leaderboardDiv.innerHTML = '<div class="loading">Loading scores...</div>';
+            
             try {
-                const snapshot = await db.collection("scores")
-                .where("difficulty", "==", difficulty)
-                .orderBy("score", "desc")
-                .limit(10) // Top 10 scores
-                .get();
+                const scoresQuery = query(
+                    collection(db, "scores"),
+                    where("difficulty", "==", difficulty),
+                    orderBy("score", "desc"),
+                    limit(10)
+                );
 
+                const snapshot = await getDocs(scoresQuery);
                 const leaderboardEntries = snapshot.docs.map(doc => doc.data());
                 displayLeaderboard(leaderboardEntries);
             } catch (error) {
                 console.error("Error fetching leaderboard:", error);
+                if (error.code === 'failed-precondition') {
+                    // This is the error code when index is not created
+                    leaderboardDiv.innerHTML = 
+                        '<div class="no-scores">Leaderboard is being set up. Please try again in a few minutes.</div>';
+                } else {
+                    leaderboardDiv.innerHTML = 
+                        '<div class="no-scores">Error loading leaderboard. Please try again later.</div>';
+                }
             }
         }
 
+        // Display leaderboard entries
         function displayLeaderboard(entries) {
-        const leaderboardDiv = document.getElementById("leaderboard-entries");
-        leaderboardDiv.innerHTML = entries
-            .map((entry, index) => `
-            <div class="leaderboard-entry">
-                <span class="rank">${index + 1}.</span>
-                <span class="name">${entry.name}</span>
-                <span class="score">${entry.score}</span>
-                <span class="time">${entry.time}s</span>
-            </div>
-            `)
-            .join("") || '<div class="no-scores">No scores yet! Be the first!</div>';
-        }
-
-        function showGameOverModal(finalScore, totalTime) {
-            const playerName = prompt("Enter your name for the leaderboard:");
-            if (playerName) {
-                submitScore(playerName, finalScore, totalTime, currentDifficulty);
+            const leaderboardDiv = document.getElementById("leaderboard-entries");
+            if (!entries || entries.length === 0) {
+                leaderboardDiv.innerHTML = '<div class="no-scores">No scores yet! Be the first!</div>';
+                return;
             }
-            fetchLeaderboard(currentDifficulty); // Refresh leaderboard
+
+            leaderboardDiv.innerHTML = entries
+                .map((entry, index) => `
+                    <div class="leaderboard-entry">
+                        <span class="rank">#${index + 1}</span>
+                        <span class="name">${entry.name || 'Anonymous'}</span>
+                        <span class="score">${entry.score} pts</span>
+                        <span class="time">${entry.time}s</span>
+                    </div>
+                `)
+                .join("");
         }
 
+        // Add leaderboard tab functionality
         document.querySelectorAll(".tab-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-            document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-            btn.classList.add("active");
-            fetchLeaderboard(btn.dataset.difficulty);
-        });
+            btn.addEventListener("click", () => {
+                document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+                fetchLeaderboard(btn.dataset.difficulty);
+            });
         });
 
-        // Initial load
+        // Initial leaderboard load
         fetchLeaderboard("easy");
+
+        // Update background image path
+        document.body.style.backgroundImage = 'url("./images/minecraft_bg.jpg")';
     </script>
 </body>
 </html>
