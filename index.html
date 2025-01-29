@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" href="images/pickaxe.png">
+    <link rel="icon" type="image/png" href="images/icon.png">
     <title>Memory Craft</title>
     <script type="module">
         // Import the functions you need from the SDKs you need
@@ -160,6 +160,7 @@
             font-size: clamp(2rem, 5vw, 3rem);
             text-align: center;
             margin: 10px 0;
+            animation: floatAnimation 3s ease-in-out infinite;
         }
 
         .score-board {
@@ -225,37 +226,101 @@
         .card {
             width: 100%;
             aspect-ratio: 1;
-            background-color: var(--card-color);
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-front,
+        .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: clamp(1.5rem, 4vw, 2rem);
             color: white;
             border-radius: 8px;
-            cursor: pointer;
-            user-select: none;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background-color: var(--card-color);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
         }
 
-        .card.flipped {
-            background-color: var(--card-flipped-color);
-            color: var(--card-flipped-text-color);
-            cursor: default;
+        .card-back {
             transform: rotateY(180deg);
+            background-color: var(--card-flipped-color);
+            background-size: 80% 80%;
+            background-repeat: no-repeat;
+            background-position: center;
         }
 
-        .card.matched {
-            box-shadow: var(--matched-glow);
-            animation: pulse 1s infinite;
+        .card:hover .card-front {
+            background-color: #5a9654;
+            box-shadow: 0 5px 15px rgba(67, 235, 29, 0.3);
         }
 
-        @keyframes pulse {
-            0%, 100% {
-                box-shadow: var(--matched-glow);
+        .card.matched .card-back {
+            animation: matchedCard 0.6s ease-out forwards;
+            box-shadow: 0 0 15px #43eb1d;
+        }
+
+        .card.wrong {
+            animation: wrongCard 0.5s cubic-bezier(0.36, 0, 0.66, -0.56);
+        }
+
+        @keyframes matchedCard {
+            0% {
+                transform: rotateY(180deg) scale(1);
             }
             50% {
-                box-shadow: 0 0 20px #ffffff;
+                transform: rotateY(180deg) scale(1.15);
+                box-shadow: 0 0 30px #43eb1d;
             }
+            75% {
+                transform: rotateY(180deg) scale(0.95);
+            }
+            100% {
+                transform: rotateY(180deg) scale(1);
+            }
+        }
+
+        @keyframes wrongCard {
+            0%, 100% {
+                transform: rotateY(180deg) translateX(0);
+            }
+            20%, 60% {
+                transform: rotateY(180deg) translateX(-8px);
+            }
+            40%, 80% {
+                transform: rotateY(180deg) translateX(8px);
+            }
+        }
+
+        /* Remove unnecessary pseudo-elements */
+        .card-content {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transform-style: preserve-3d;
+        }
+
+        @keyframes floatAnimation {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
         }
 
         .footer {
@@ -308,6 +373,7 @@
             text-align: center;
             width: 90%;
             max-width: 400px;
+            animation: modalSlideIn 0.3s ease-out;
         }
 
         .modal h2 {
@@ -436,6 +502,7 @@
             background: rgba(67, 235, 29, 0.1);
             border-radius: 5px;
             font-size: 0.9rem;
+            transition: transform 0.2s ease;
         }
 
         .leaderboard-entry:nth-child(even) {
@@ -460,6 +527,11 @@
             text-align: right;
         }
 
+        .leaderboard-entry:hover {
+            transform: scale(1.02);
+            background: rgba(67, 235, 29, 0.2);
+        }
+
         .no-scores {
             text-align: center;
             color: #43eb1d;
@@ -472,6 +544,85 @@
             color: #43eb1d;
             padding: 10px;
             animation: pulse 1.5s infinite;
+        }
+
+        /* Add modal animations */
+        @keyframes modalSlideIn {
+            from {
+                transform: translate(-50%, -70%);
+                opacity: 0;
+            }
+            to {
+                transform: translate(-50%, -50%);
+                opacity: 1;
+            }
+        }
+
+        /* Update button hover animations */
+        .difficulty-btn:hover, .tab-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(67, 235, 29, 0.3);
+        }
+
+        .theme-toggle:hover {
+            animation: glowPulse 1.5s infinite;
+        }
+
+        /* Add celebration animations */
+        @keyframes celebrate {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes confetti {
+            0% { transform: translateY(0) rotateZ(0); opacity: 1; }
+            100% { transform: translateY(1000px) rotateZ(720deg); opacity: 0; }
+        }
+
+        @keyframes gameComplete {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .celebration-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 998;
+            pointer-events: none;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #43eb1d;
+            clip-path: polygon(50% 0%, 90% 20%, 100% 60%, 75% 100%, 25% 100%, 0% 60%, 10% 20%);
+            animation: confetti 2s ease-out forwards;
+        }
+
+        .victory-text {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            color: #43eb1d;
+            text-shadow: 0 0 20px rgba(67, 235, 29, 0.5);
+            z-index: 999;
+            animation: gameComplete 0.5s ease-out forwards;
+            pointer-events: none;
+        }
+
+        /* Update modal animation for game end */
+        .modal.game-complete {
+            animation: celebrate 0.5s ease-out;
         }
     </style>
 </head>
@@ -513,7 +664,7 @@
         <button id="play-music">Play Music</button>
         <button id="pause-music">Pause Music</button>
     </div>
-    <div class="footer">Made with ❤️ by <a href="https://github.com/iboy-x" target="_blank">iboy-x</a></div>
+   
 
     <!-- Modal -->
     <div class="modal-overlay" id="modal-overlay"></div>
@@ -535,6 +686,8 @@
         <div id="leaderboard-entries"></div>
     </div>
 
+    <div class="footer">Made with ❤️ by <a href="https://github.com/iboy-x" target="_blank">iboy-x</a></div>
+    
     <audio id="bg-music" loop autoplay>
         <source src="minecraftSound.mp3" type="audio/mpeg">
         Your browser does not support the audio element.
@@ -674,7 +827,38 @@
         let startTime = null;
         let timerInterval;
 
-        function showGameOverModal(finalScore, totalTime) {
+        async function checkHighScore(score, difficulty) {
+            try {
+                const scoresQuery = query(
+                    collection(db, "scores"),
+                    where("difficulty", "==", difficulty),
+                    orderBy("score", "desc"),
+                    limit(10)
+                );
+
+                const snapshot = await getDocs(scoresQuery);
+                const scores = snapshot.docs.map(doc => doc.data());
+
+                // If we have less than 10 scores, any score qualifies
+                if (scores.length < 10) return true;
+
+                // Check if the new score is higher than the lowest score in top 10
+                const lowestScore = scores[scores.length - 1].score;
+                return score > lowestScore;
+            } catch (error) {
+                console.error("Error checking high score:", error);
+                return true; // In case of error, let's give the player a chance to submit
+            }
+        }
+
+        async function showGameOverModal(finalScore, totalTime) {
+            // Create celebration effect
+            createConfetti();
+            
+            // Add game complete class to modal for animation
+            modal.classList.add('game-complete');
+
+            // Existing modal code
             document.getElementById('final-score').textContent = finalScore;
             document.getElementById('final-time').textContent = totalTime;
             
@@ -692,17 +876,28 @@
             }
             document.getElementById('modal-high-score').textContent = currentHighScore;
 
-            // Prompt for name and submit score to Firebase
-            const playerName = prompt("Enter your name for the leaderboard (max 15 characters):");
-            if (playerName) {
-                submitScore(playerName, finalScore, totalTime, currentDifficulty);
+            // Check if score qualifies for leaderboard
+            const isHighScore = await checkHighScore(finalScore, currentDifficulty);
+            
+            if (isHighScore) {
+                const playerName = prompt("🏆 NEW HIGH SCORE! Enter your name for the leaderboard (max 15 characters):");
+                if (playerName) {
+                    submitScore(playerName, finalScore, totalTime, currentDifficulty);
+                }
+            } else {
+                console.log("Score not high enough for leaderboard");
+                fetchLeaderboard(currentDifficulty);
             }
 
-            modal.style.display = 'block';
-            modalOverlay.style.display = 'block';
+            // Show modal with slight delay for better effect
+            setTimeout(() => {
+                modal.style.display = 'block';
+                modalOverlay.style.display = 'block';
+            }, 1000);
         }
 
         restartButton.addEventListener('click', () => {
+            modal.classList.remove('game-complete');
             modal.style.display = 'none';
             modalOverlay.style.display = 'none';
             resetGame();
@@ -754,14 +949,15 @@
         function handleCardClick(card) {
             if (card.classList.contains('flipped') || flippedCards.length === 2) return;
 
+            // Play flip sound
+            flipSound.currentTime = 0;
+            flipSound.play().catch(e => console.log('Audio play failed:', e));
+
             if (!startTime) {
                 startTime = Date.now();
                 startTimer();
             }
 
-            card.style.backgroundImage = `url(${card.dataset.item})`;
-            card.style.backgroundSize = 'cover';
-            card.textContent = '';
             card.classList.add('flipped');
             flippedCards.push(card);
 
@@ -783,66 +979,44 @@
 
         function checkForMatch() {
             const [card1, card2] = flippedCards;
+            const oldScore = score;
 
             if (card1.dataset.item === card2.dataset.item) {
+                // Play match sound
+                matchSound.currentTime = 0;
+                matchSound.play().catch(e => console.log('Audio play failed:', e));
+
                 card1.classList.add('matched');
                 card2.classList.add('matched');
 
                 matchedCount += 2;
                 score = calculateScore(matchedCount / 2, moves, Math.floor((Date.now() - startTime) / 1000));
+                
+                // Calculate score difference and create popup
+                const scoreDiff = score - oldScore;
+                const rect = card1.getBoundingClientRect();
+                createScorePopup(rect.left + rect.width / 2, rect.top, scoreDiff);
+
                 scoreElement.textContent = score;
 
                 if (matchedCount === itemPairs.length) {
                     const totalTime = Math.floor((Date.now() - startTime) / 1000);
                     clearInterval(timerInterval);
-
-                    if (currentDifficulty === 'easy') {
-                        if (!bestTimeEasy || totalTime < bestTimeEasy) {
-                            bestTimeEasy = totalTime;
-                            localStorage.setItem('bestTimeEasy', bestTimeEasy);
-                            updateBestTimeDisplay();
-                        }
-                        if (score > highScoreEasy) {
-                            highScoreEasy = score;
-                            localStorage.setItem('highScoreEasy', highScoreEasy);
-                            updateHighScoreDisplay();
-                        }
-                    } else if (currentDifficulty === 'medium') {
-                        if (!bestTimeMedium || totalTime < bestTimeMedium) {
-                            bestTimeMedium = totalTime;
-                            localStorage.setItem('bestTimeMedium', bestTimeMedium);
-                            updateBestTimeDisplay();
-                        }
-                        if (score > highScoreMedium) {
-                            highScoreMedium = score;
-                            localStorage.setItem('highScoreMedium', highScoreMedium);
-                            updateHighScoreDisplay();
-                        }
-                    } else if (currentDifficulty === 'hard') {
-                        if (!bestTimeHard || totalTime < bestTimeHard) {
-                            bestTimeHard = totalTime;
-                            localStorage.setItem('bestTimeHard', bestTimeHard);
-                            updateBestTimeDisplay();
-                        }
-                        if (score > highScoreHard) {
-                            highScoreHard = score;
-                            localStorage.setItem('highScoreHard', highScoreHard);
-                            updateHighScoreDisplay();
-                        }
-                    }
-
-                    showGameOverModal(score, totalTime);
+                    setTimeout(() => showGameOverModal(score, totalTime), 800);
                 }
 
                 flippedCards = [];
             } else {
+                // Play wrong sound
+                wrongSound.currentTime = 0;
+                wrongSound.play().catch(e => console.log('Audio play failed:', e));
+
+                card1.classList.add('wrong');
+                card2.classList.add('wrong');
+
                 setTimeout(() => {
-                    card1.classList.remove('flipped');
-                    card2.classList.remove('flipped');
-                    card1.style.backgroundImage = '';
-                    card1.textContent = '?';
-                    card2.style.backgroundImage = '';
-                    card2.textContent = '?';
+                    card1.classList.remove('flipped', 'wrong');
+                    card2.classList.remove('flipped', 'wrong');
                     flippedCards = [];
                 }, flipTime);
             }
@@ -877,11 +1051,28 @@
                 card.dataset.item = item;
                 card.dataset.index = index;
 
-                card.textContent = '?';
-                card.style.backgroundImage = '';
+                // Create card content container
+                const cardContent = document.createElement('div');
+                cardContent.classList.add('card-content');
+
+                // Create front face
+                const cardFront = document.createElement('div');
+                cardFront.classList.add('card-front');
+                cardFront.textContent = '?';
+
+                // Create back face
+                const cardBack = document.createElement('div');
+                cardBack.classList.add('card-back');
+                cardBack.style.backgroundImage = `url(${item})`;
+                cardBack.style.backgroundSize = 'cover';
+                cardBack.style.backgroundPosition = 'center';
+
+                // Assemble card
+                cardContent.appendChild(cardFront);
+                cardContent.appendChild(cardBack);
+                card.appendChild(cardContent);
 
                 card.addEventListener('click', () => handleCardClick(card));
-
                 gameBoard.appendChild(card);
             });
         }
@@ -903,79 +1094,6 @@
             popup.addEventListener('animationend', () => {
                 document.body.removeChild(popup);
             });
-        }
-
-        function handleCardClick(card) {
-            if (card.classList.contains('flipped') || flippedCards.length === 2) return;
-
-            // Play flip sound
-            flipSound.currentTime = 0;
-            flipSound.play().catch(e => console.log('Audio play failed:', e));
-
-            if (!startTime) {
-                startTime = Date.now();
-                startTimer();
-            }
-
-            card.style.backgroundImage = `url(${card.dataset.item})`;
-            card.style.backgroundSize = 'cover';
-            card.textContent = '';
-            card.classList.add('flipped');
-            flippedCards.push(card);
-
-            if (flippedCards.length === 2) {
-                moves++;
-                moveCounterElement.textContent = moves;
-                checkForMatch();
-            }
-        }
-
-        function checkForMatch() {
-            const [card1, card2] = flippedCards;
-            const oldScore = score;
-
-            if (card1.dataset.item === card2.dataset.item) {
-                // Play match sound
-                matchSound.currentTime = 0;
-                matchSound.play().catch(e => console.log('Audio play failed:', e));
-
-                card1.classList.add('matched');
-                card2.classList.add('matched');
-
-                matchedCount += 2;
-                score = calculateScore(matchedCount / 2, moves, Math.floor((Date.now() - startTime) / 1000));
-                
-                // Calculate score difference and create popup
-                const scoreDiff = score - oldScore;
-                const rect = card1.getBoundingClientRect();
-                createScorePopup(rect.left + rect.width / 2, rect.top, scoreDiff);
-
-                scoreElement.textContent = score;
-
-                // Rest of the match checking logic remains the same
-                if (matchedCount === itemPairs.length) {
-                    const totalTime = Math.floor((Date.now() - startTime) / 1000);
-                    clearInterval(timerInterval);
-
-                    // Previous win condition code remains the same
-
-                    showGameOverModal(score, totalTime);
-                }
-
-                flippedCards = [];
-            } else {
-                wrongSound.currentTime = 0;
-                wrongSound.play().catch(e => console.log('Audio play failed:', e));
-                setTimeout(() => {
-                    card1.classList.remove('flipped');
-                    card2.classList.remove('flipped');
-                    card1.style.backgroundImage = '';
-                    card1.textContent = '?';
-                    card2.style.backgroundImage = '';
-                    card2.textContent = '?';
-                    flippedCards = [];
-                }, flipTime);
-            }
         }
 
         // Start game only after images are preloaded
@@ -1072,6 +1190,37 @@
 
         // Update background image path
         document.body.style.backgroundImage = 'url("./images/minecraft_bg.jpg")';
+
+        // Add celebration functions
+        function createConfetti() {
+            const overlay = document.getElementById('celebration-overlay');
+            overlay.style.display = 'block';
+            overlay.innerHTML = '';
+
+            // Create multiple confetti pieces
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.animationDelay = Math.random() * 2 + 's';
+                confetti.style.backgroundColor = ['#43eb1d', '#5cdb95', '#ffeb3b', '#ff5722'][Math.floor(Math.random() * 4)];
+                overlay.appendChild(confetti);
+            }
+
+            // Show victory text
+            const victoryText = document.getElementById('victory-text');
+            victoryText.style.display = 'block';
+
+            // Clean up after animations
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                victoryText.style.display = 'none';
+            }, 4000);
+        }
     </script>
+
+    <!-- Add celebration elements after the modal -->
+    <div class="celebration-overlay" id="celebration-overlay"></div>
+    <div class="victory-text" id="victory-text">VICTORY!</div>
 </body>
 </html>
