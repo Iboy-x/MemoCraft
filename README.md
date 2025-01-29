@@ -1,87 +1,129 @@
 # Memory Craft 🎮
 
-A Minecraft-themed memory card game built with HTML, CSS, and JavaScript. Test your memory by matching pairs of Minecraft items while enjoying the classic Minecraft aesthetics.
+A Minecraft-themed memory card game built with HTML, CSS, and JavaScript, featuring Firebase integration for global leaderboards. Test your memory by matching pairs of Minecraft items while competing with players worldwide!
 
-## 🎯 Features
+## 🌟 Features
 
+### Core Gameplay
 - **Multiple Difficulty Levels**
   - Easy (8 pairs)
   - Medium (10 pairs)
-  - Dark (12 pairs)
+  - Hard (12 pairs)
+  - Adjustable flip times per difficulty
+  - Difficulty-based scoring multipliers
 
-- **Score System**
-  - Points based on matches, moves, and time
-  - High score tracking for each difficulty level
-  - Best time records
+### 🏆 Competitive Features
+- **Global Leaderboard System**
+  - Top 10 scores for each difficulty
+  - Real-time score updates
+  - Player name recognition
+  - Time and score tracking
 
-- **Theme Options**
+- **Advanced Scoring System**
+  - Dynamic score calculation based on:
+    - Number of matches
+    - Moves efficiency
+    - Completion time
+    - Difficulty multipliers (Easy: 1x, Medium: 1.5x, Hard: 2x)
+  - Score popup animations for instant feedback
+  - High score and best time tracking per difficulty
+
+### 🎨 Visual and Audio
+- **Polished Animations**
+  - Smooth card flip transitions
+  - Match success effects
+  - Wrong match feedback
+  - Victory celebration with confetti
+  - Score popup animations
+
+- **Theme Customization**
   - Light/Dark mode toggle
   - Minecraft-styled pixelated font
-  - Minecraft background imagery
+  - Dynamic background
+  - Responsive design for all devices
 
-- **Audio**
-  - Music on cards flip and cards matching
+- **Audio Experience**
   - Background music
+  - Card flip sounds
+  - Match success sounds
+  - Wrong match feedback
   - Music controls (Play/Pause)
+
+### 🔄 Game Flow
+- **Loading System**
+  - Asset preloading
+  - Loading progress bar
+  - Smooth transition to gameplay
+
+- **Game Over Experience**
+  - Victory celebration
+  - Score summary
+  - Leaderboard qualification check
+  - Encouraging messages
+  - Quick restart option
 
 ## 🎮 How to Play
 
-1. Select your preferred difficulty level (Easy, Medium, or Hard)
-2. Click on cards to flip them
-3. Find matching pairs of Minecraft items
-4. Complete the game with the highest score possible
-5. Try to beat your best time and high score!
+1. Select your preferred difficulty level
+2. Click cards to reveal Minecraft items
+3. Match pairs to earn points
+4. Complete the game quickly with fewer moves for higher scores
+5. Enter your name if you qualify for the leaderboard
+6. Try to reach the top 10 in each difficulty!
 
-## 📊 Scoring System
-
-The score is calculated based on:
-- Number of matches
-- Number of moves made
-- Time taken to complete
-- Difficulty multiplier
-  - Easy: 1x
-  - Medium: 1.5x
-  - Hard: 2x
-
-## 🛠️ Technical Details
+## 🛠️ Technical Implementation
 
 ### Technologies Used
-- HTML5
-- CSS3
+- HTML5 & CSS3
 - Vanilla JavaScript
+- Firebase (Authentication & Firestore)
 - Google Fonts (Pixelify Sans)
 
-### Game Assets
-- Minecraft-themed item images
-- Background music
-- Custom background image
+### Firebase Features
+- Anonymous authentication
+- Real-time database
+- Secure data storage
+- Global leaderboard system
 
-### Features Implementation
-- Local storage for high scores and best times
-- Responsive grid layout
-- Card flip animations
-- Match highlighting effects
-- Modal for game completion
+### Performance Optimizations
+- Image preloading
+- Optimized animations
+- Efficient state management
+- Responsive layout system
+- Progressive loading
 
 ## 🚀 Installation
 
 1. Clone the repository:
+```bash
+git clone https://github.com/Iboy-x/memory_craft.git
+```
 
-2. Navigate to the project directory: 
+2. Set up Firebase:
+   - Create a Firebase project
+   - Enable Anonymous Authentication
+   - Set up Firestore Database
+   - Update Firebase configuration in `index.html`
 
-3. Open `index.html` in your web browser
+3. Open `index.html` in your browser or deploy to your preferred hosting service
 
 ## 🎨 Customization
 
 You can customize the game by:
 - Adding new Minecraft items to the `minecraftItems` array
-- Adjusting difficulty settings in the `difficultySettings` object
-- Modifying CSS variables for different color schemes
-- Changing the background music
+- Adjusting difficulty settings in `difficultySettings`
+- Modifying CSS variables for different themes
+- Changing sound effects and background music
+- Adjusting animation timings and effects
 
 ## 🤝 Contributing
 
-Feel free to fork this project and submit pull requests. You can also open issues for bugs or feature requests.
+Contributions are welcome! Feel free to:
+- Fork the repository
+- Create feature branches
+- Submit pull requests
+- Open issues for bugs or feature requests
+- Suggest improvements
 
 ## 📝 License
 
@@ -93,4 +135,4 @@ Made with ❤️ by [iboy-x](https://github.com/iboy-x)
 
 ---
 
-**Note:** This game is a fan project and is not affiliated with Mojang or Microsoft. Minecraft is a registered trademark of Mojang Studios.
+**Note:** This is a fan project and is not affiliated with Mojang or Microsoft. Minecraft is a registered trademark of Mojang Studios.
